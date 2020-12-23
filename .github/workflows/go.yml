@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build:
+  build_and_release:
     name: Build
     runs-on: ubuntu-latest
     steps:
@@ -31,3 +31,25 @@ jobs:
 
     - name: Build
       run: go build -v -o=bin ./...
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload "Organize my files, Woodhouse!"
+      id: upload-release-asset-organizemyfiles
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bin/organizemyfiles
+        asset_name: organizemyfiles.bin
+        asset_content_type: application/octet-stream
