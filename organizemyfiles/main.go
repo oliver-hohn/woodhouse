@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/djherbis/times"
@@ -36,20 +38,33 @@ func NewFile(path string) (*File, error) {
 	return &file, nil
 }
 
-func (f *File) GetYear() int32 {
-	if f.HasCreatedAt {
-		return int32(f.CreatedAt.Year())
+const Undefined = "UNDEFINED"
+
+func (f *File) GetYear() string {
+	if !f.HasCreatedAt {
+		return Undefined
 	}
 
-	return -1
+	return strconv.Itoa(f.CreatedAt.Year())
 }
 
-func (f *File) GetQuarterIndex() int32 {
-	if f.HasCreatedAt {
-		return int32(f.CreatedAt.Month() / 3)
+func (f *File) GetQuarter() string {
+	if !f.HasCreatedAt {
+		return Undefined
 	}
 
-	return -1
+	switch quarterIndex := f.CreatedAt.Month() / 3; quarterIndex {
+	case 0:
+		return "jan_to_march"
+	case 1:
+		return "april_to_june"
+	case 2:
+		return "july_to_september"
+	case 3:
+		return "october_to_december"
+	default:
+		panic(fmt.Errorf("invalid quarter index: %d", quarterIndex))
+	}
 }
 
 func main() {
@@ -63,19 +78,20 @@ func main() {
 		log.Fatalf("\"in\" and \"out\" parameters have the same value: %s", *inDir)
 	}
 
-	files := []*File{}
 	err := filepath.Walk(*inDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-
 		if !info.IsDir() {
 			f, err := NewFile(path)
 			if err != nil {
 				return err
 			}
 
-			files = append(files, f)
+			err = copy(f)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -83,4 +99,34 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to read files in input directory: %v", err)
 	}
+}
+
+func copy(f *File) error {
+	source, err := os.Open(f.Path)
+	if err != nil {
+		return fmt.Errorf("unable to open input file: %s, due to: %w", f.Path, err)
+	}
+	defer source.Close()
+
+	outPrefix := filepath.Join(*outDir, f.GetYear(), f.GetQuarter())
+	// 0777 = Read, Write, Execute for Users, Groups, and Other
+	err = os.MkdirAll(outPrefix, 0777)
+	if err != nil {
+		return fmt.Errorf("unable to create output directory: %s, due to: %w", outPrefix, err)
+	}
+
+	out := filepath.Join(outPrefix, filepath.Base(f.Path))
+	dest, err := os.Create(out)
+	if err != nil {
+		return fmt.Errorf("unable to create output file: %s, due to: %w", out, err)
+	}
+	defer dest.Close()
+
+	_, err = io.Copy(dest, source)
+	if err != nil {
+		return fmt.Errorf("unable to copy: %s, to: %s, due to: %w", f.Path, out, err)
+	}
+	fmt.Printf("Copied %s to %s\n", f.Path, out)
+
+	return nil
 }
