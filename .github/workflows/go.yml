@@ -34,14 +34,14 @@ jobs:
 
     - name: Get current date time
       id: current_datetime
-      run: echo "now=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+      run: echo "NOW=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
 
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        RELEASE_NAME: ${{steps.current_datetime.outputs.date}}.${{env.GITHUB_RUN_NUMBER}}
+        RELEASE_NAME: ${{env.NOW}}.${{github.run_number }}
       with:
         tag_name: ${{ env.RELEASE_NAME }}
         release_name: Release ${{ env.RELEASE_NAME }}
