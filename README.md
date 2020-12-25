@@ -14,3 +14,5 @@ $ go run organizemyfiles/main.go --in=/path/to/directory/with/unorganized/files/
 Copied /path/to/directory/with/unorganized/files/foo.md to /path/to/organized/directory/2018/jan_to_march/foo.md
 Copied /path/to/directory/with/unorganized/files/bar/lorem.ipsum to /path/to/organized/directory/2018/jan_to_march/lorem.ipsum
 ```
+
+_Optionally, the `--dryrun=1` option can be provided to **only** print the copies that would be executed, without executing them._
