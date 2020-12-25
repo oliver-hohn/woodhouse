@@ -1,8 +1,6 @@
 name: Go
 
-on:
-  push:
-    branches: [ main ]
+on: push
 
 jobs:
   build_and_release:
@@ -49,7 +47,7 @@ jobs:
         prerelease: false
 
     - name: Upload "Organize my files, Woodhouse!" for Linux
-      id: upload-release-asset-organizemyfiles
+      id: upload-release-asset-organizemyfiles-linux
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,7 +58,7 @@ jobs:
         asset_content_type: application/octet-stream
 
     - name: Upload "Organize my files, Woodhouse!" for Mac
-      id: upload-release-asset-organizemyfiles
+      id: upload-release-asset-organizemyfiles-mac
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
