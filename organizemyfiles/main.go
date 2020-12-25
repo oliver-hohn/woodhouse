@@ -15,6 +15,7 @@ import (
 
 var inDir = flag.String("in", "", "Path to directory with files to organize")
 var outDir = flag.String("out", "", "Path to directory where to place the organized files")
+var dryrun = flag.Bool("dryrun", false, "Enable to only print how the files would be organised, instead of actually organizing them in the out directory.")
 
 type File struct {
 	Path         string
@@ -120,22 +121,28 @@ func main() {
 }
 
 func copy(f *File, fileIndex uint64) error {
+	outPrefix := filepath.Join(*outDir, f.GetYear(), f.GetQuarter())
+	// Suffix filename with an index to avoid clashes for similarly named files
+	outFilename := fmt.Sprintf("%s_%d%s", f.GetName(), fileIndex, f.GetExt())
+	out := filepath.Join(outPrefix, outFilename)
+
+	if *dryrun {
+		fmt.Printf("(dryrun) Copy %s to %s\n", f.Path, out)
+		return nil
+	}
+
 	source, err := os.Open(f.Path)
 	if err != nil {
 		return fmt.Errorf("unable to open input file: %s, due to: %w", f.Path, err)
 	}
 	defer source.Close()
 
-	outPrefix := filepath.Join(*outDir, f.GetYear(), f.GetQuarter())
 	// 0777 = Read, Write, Execute for Users, Groups, and Other
 	err = os.MkdirAll(outPrefix, 0777)
 	if err != nil {
 		return fmt.Errorf("unable to create output directory: %s, due to: %w", outPrefix, err)
 	}
 
-	// Suffix filename with an index to avoid clashes for similarly named files
-	outFilename := fmt.Sprintf("%s_%d%s", f.GetName(), fileIndex, f.GetExt())
-	out := filepath.Join(outPrefix, outFilename)
 	dest, err := os.Create(out)
 	if err != nil {
 		return fmt.Errorf("unable to create output file: %s, due to: %w", out, err)
