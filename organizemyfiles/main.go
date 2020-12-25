@@ -67,6 +67,21 @@ func (f *File) GetQuarter() string {
 	}
 }
 
+func (f *File) GetName() string {
+	nameWithExt := filepath.Base(f.Path)
+	ext := f.GetExt()
+
+	// For example:
+	// nameWithExt = "foo.bar"
+	// ext == ".bar"
+	// name == "foo"
+	return nameWithExt[0 : len(nameWithExt)-len(ext)]
+}
+
+func (f *File) GetExt() string {
+	return filepath.Ext(f.Path)
+}
+
 func main() {
 	flag.Parse()
 
@@ -78,6 +93,8 @@ func main() {
 		log.Fatalf("\"in\" and \"out\" parameters have the same value: %s", *inDir)
 	}
 
+	fileIndex := uint64(0)
+
 	err := filepath.Walk(*inDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -88,10 +105,11 @@ func main() {
 				return err
 			}
 
-			err = copy(f)
+			err = copy(f, fileIndex)
 			if err != nil {
 				return err
 			}
+			fileIndex++
 		}
 
 		return nil
@@ -101,7 +119,7 @@ func main() {
 	}
 }
 
-func copy(f *File) error {
+func copy(f *File, fileIndex uint64) error {
 	source, err := os.Open(f.Path)
 	if err != nil {
 		return fmt.Errorf("unable to open input file: %s, due to: %w", f.Path, err)
@@ -115,7 +133,9 @@ func copy(f *File) error {
 		return fmt.Errorf("unable to create output directory: %s, due to: %w", outPrefix, err)
 	}
 
-	out := filepath.Join(outPrefix, filepath.Base(f.Path))
+	// Suffix filename with an index to avoid clashes for similarly named files
+	outFilename := fmt.Sprintf("%s_%d%s", f.GetName(), fileIndex, f.GetExt())
+	out := filepath.Join(outPrefix, outFilename)
 	dest, err := os.Create(out)
 	if err != nil {
 		return fmt.Errorf("unable to create output file: %s, due to: %w", out, err)
