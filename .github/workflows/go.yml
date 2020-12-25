@@ -26,8 +26,11 @@ jobs:
             dep ensure
         fi
 
-    - name: Build
-      run: go build -v -o=bin ./...
+    - name: Build for Linux
+      run: go build -v -o=bin/linux ./...
+
+    - name: Build for Mac
+      run: GOOS=darwin GOARCH=amd64 go build -v -o=bin/mac ./...
 
     - name: Get current date time
       id: current_datetime
@@ -45,13 +48,24 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Upload "Organize my files, Woodhouse!"
+    - name: Upload "Organize my files, Woodhouse!" for Linux
       id: upload-release-asset-organizemyfiles
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/organizemyfiles
-        asset_name: organizemyfiles.bin
+        asset_path: ./bin/linux/organizemyfiles
+        asset_name: organizemyfiles.linux.bin
+        asset_content_type: application/octet-stream
+
+    - name: Upload "Organize my files, Woodhouse!" for Mac
+      id: upload-release-asset-organizemyfiles
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bin/mac/organizemyfiles
+        asset_name: organizemyfiles.mac.bin
         asset_content_type: application/octet-stream
