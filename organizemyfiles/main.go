@@ -56,13 +56,13 @@ func (f *File) GetQuarter() string {
 
 	switch quarterIndex := f.CreatedAt.Month() / 3; quarterIndex {
 	case 0:
-		return "jan_to_march"
+		return "00_jan_to_mar"
 	case 1:
-		return "april_to_june"
+		return "01_apr_to_jun"
 	case 2:
-		return "july_to_september"
+		return "02_jul_to_sep"
 	case 3:
-		return "october_to_december"
+		return "03_oct_to_dec"
 	default:
 		panic(fmt.Errorf("invalid quarter index: %d", quarterIndex))
 	}
