@@ -84,6 +84,18 @@ func (f *File) GetExt() string {
 	return filepath.Ext(f.Path)
 }
 
+func (f *File) GetOutputDir() string {
+	return filepath.Join(*outDir, f.GetYear(), f.GetQuarter())
+}
+
+func (f *File) GetOutputFilename(suffix string) string {
+	if suffix != "" {
+		return fmt.Sprintf("%s_%s%s", f.GetName(), suffix, f.GetExt())
+	}
+
+	return fmt.Sprintf("%s%s", f.GetName(), f.GetExt())
+}
+
 func main() {
 	flag.Parse()
 
@@ -148,9 +160,9 @@ func shouldIgnoreFile(f *File) bool {
 }
 
 func copy(f *File, fileIndex uint64) error {
-	outPrefix := filepath.Join(*outDir, f.GetYear(), f.GetQuarter())
+	outPrefix := f.GetOutputDir()
 	// Suffix filename with an index to avoid clashes for similarly named files
-	outFilename := fmt.Sprintf("%s_%d%s", f.GetName(), fileIndex, f.GetExt())
+	outFilename := f.GetOutputFilename(strconv.FormatUint(fileIndex, 10))
 	out := filepath.Join(outPrefix, outFilename)
 
 	if *dryrun {
@@ -186,9 +198,9 @@ func copy(f *File, fileIndex uint64) error {
 }
 
 func move(f *File, fileIndex uint64) error {
-	outPrefix := filepath.Join(*outDir, f.GetYear(), f.GetQuarter())
+	outPrefix := f.GetOutputDir()
 	// Suffix filename with an index to avoid clashes for similarly named files
-	outFilename := fmt.Sprintf("%s_%d%s", f.GetName(), fileIndex, f.GetExt())
+	outFilename := f.GetOutputFilename(strconv.FormatUint(fileIndex, 10))
 	out := filepath.Join(outPrefix, outFilename)
 
 	if *dryrun {
