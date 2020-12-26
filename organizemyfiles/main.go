@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/djherbis/times"
+	"github.com/fatih/color"
 )
 
 var inDir = flag.String("in", "", "Path to directory with files to organize")
@@ -84,6 +85,18 @@ func (f *File) GetExt() string {
 	return filepath.Ext(f.Path)
 }
 
+func (f *File) GetOutputDir() string {
+	return filepath.Join(*outDir, f.GetYear(), f.GetQuarter())
+}
+
+func (f *File) GetOutputFilename(suffix string) string {
+	if suffix != "" {
+		return fmt.Sprintf("%s_%s%s", f.GetName(), suffix, f.GetExt())
+	}
+
+	return fmt.Sprintf("%s%s", f.GetName(), f.GetExt())
+}
+
 func main() {
 	flag.Parse()
 
@@ -148,10 +161,19 @@ func shouldIgnoreFile(f *File) bool {
 }
 
 func copy(f *File, fileIndex uint64) error {
-	outPrefix := filepath.Join(*outDir, f.GetYear(), f.GetQuarter())
+	outPrefix := f.GetOutputDir()
 	// Suffix filename with an index to avoid clashes for similarly named files
-	outFilename := fmt.Sprintf("%s_%d%s", f.GetName(), fileIndex, f.GetExt())
+	outFilename := f.GetOutputFilename(strconv.FormatUint(fileIndex, 10))
 	out := filepath.Join(outPrefix, outFilename)
+
+	// Prevent overwrites by raising an error if the output file already exists
+	if _, err := os.Stat(out); !os.IsNotExist(err) {
+		if *dryrun {
+			logError("(dryrun) unable to copy %s to: %s, as the output file already exists\n", f.Path, out)
+			return nil
+		}
+		return fmt.Errorf("unable to copy %s to: %s, as the output file already exists", f.Path, out)
+	}
 
 	if *dryrun {
 		fmt.Printf("(dryrun) Copy %s to %s\n", f.Path, out)
@@ -186,10 +208,19 @@ func copy(f *File, fileIndex uint64) error {
 }
 
 func move(f *File, fileIndex uint64) error {
-	outPrefix := filepath.Join(*outDir, f.GetYear(), f.GetQuarter())
+	outPrefix := f.GetOutputDir()
 	// Suffix filename with an index to avoid clashes for similarly named files
-	outFilename := fmt.Sprintf("%s_%d%s", f.GetName(), fileIndex, f.GetExt())
+	outFilename := f.GetOutputFilename(strconv.FormatUint(fileIndex, 10))
 	out := filepath.Join(outPrefix, outFilename)
+
+	// Prevent overwrites by raising an error if the output file already exists
+	if _, err := os.Stat(out); !os.IsNotExist(err) {
+		if *dryrun {
+			logError("(dryrun) unable to move %s to: %s, as the output file already exists\n", f.Path, out)
+			return nil
+		}
+		return fmt.Errorf("unable to move %s to: %s, as the output file already exists", f.Path, out)
+	}
 
 	if *dryrun {
 		fmt.Printf("(dryrun) Move %s to %s\n", f.Path, out)
@@ -207,4 +238,8 @@ func move(f *File, fileIndex uint64) error {
 	fmt.Printf("Moved %s to %s\n", f.Path, out)
 
 	return nil
+}
+
+func logError(msg string, args ...interface{}) {
+	color.Red(fmt.Sprintf(msg, args...))
 }
