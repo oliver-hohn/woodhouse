@@ -106,6 +106,10 @@ func main() {
 				return err
 			}
 
+			if shouldIgnoreFile(f) {
+				return nil
+			}
+
 			err = copy(f, fileIndex)
 			if err != nil {
 				return err
@@ -118,6 +122,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to read files in input directory: %v", err)
 	}
+}
+
+var extensionsToIgnore = []string{".DS_Store"}
+
+func shouldIgnoreFile(f *File) bool {
+	fileExt := f.GetExt()
+	for _, ext := range extensionsToIgnore {
+		if fileExt == ext {
+			return true
+		}
+	}
+
+	return false
 }
 
 func copy(f *File, fileIndex uint64) error {
