@@ -16,6 +16,7 @@ import (
 var inDir = flag.String("in", "", "Path to directory with files to organize")
 var outDir = flag.String("out", "", "Path to directory where to place the organized files")
 var dryrun = flag.Bool("dryrun", false, "Enable to only print how the files would be organised, instead of actually organizing them in the out directory.")
+var opType = flag.String("op_type", "copy", "Type of operation to use when organizing. Allowed values are: copy, or move.")
 
 type File struct {
 	Path         string
@@ -110,10 +111,19 @@ func main() {
 				return nil
 			}
 
-			err = copy(f, fileIndex)
-			if err != nil {
-				return err
+			switch *opType {
+			case "copy":
+				if err := copy(f, fileIndex); err != nil {
+					return err
+				}
+			case "move":
+				if err := move(f, fileIndex); err != nil {
+					return err
+				}
+			default:
+				log.Fatalf("unknown op_type: %s", *opType)
 			}
+
 			fileIndex++
 		}
 
@@ -171,6 +181,30 @@ func copy(f *File, fileIndex uint64) error {
 		return fmt.Errorf("unable to copy: %s, to: %s, due to: %w", f.Path, out, err)
 	}
 	fmt.Printf("Copied %s to %s\n", f.Path, out)
+
+	return nil
+}
+
+func move(f *File, fileIndex uint64) error {
+	outPrefix := filepath.Join(*outDir, f.GetYear(), f.GetQuarter())
+	// Suffix filename with an index to avoid clashes for similarly named files
+	outFilename := fmt.Sprintf("%s_%d%s", f.GetName(), fileIndex, f.GetExt())
+	out := filepath.Join(outPrefix, outFilename)
+
+	if *dryrun {
+		fmt.Printf("(dryrun) Move %s to %s\n", f.Path, out)
+		return nil
+	}
+
+	// 0777 = Read, Write, Execute for Users, Groups, and Other
+	if err := os.MkdirAll(outPrefix, 0777); err != nil {
+		return fmt.Errorf("unable to create output directory: %s, due to: %w", outPrefix, err)
+	}
+
+	if err := os.Rename(f.Path, out); err != nil {
+		return fmt.Errorf("unable to move: %s, to: %s, due to: %w", f.Path, out, err)
+	}
+	fmt.Printf("Moved %s to %s\n", f.Path, out)
 
 	return nil
 }
