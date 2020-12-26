@@ -56,7 +56,13 @@ func (f *File) GetQuarter() string {
 		return Undefined
 	}
 
-	switch quarterIndex := f.CreatedAt.Month() / 3; quarterIndex {
+	// Month() starts at 1 for January, and ends at 12 for December.
+	// By subtracting by -1 we can ensure that:
+	// Jan -> March is 0
+	// April -> June is 1
+	// July -> September is 2
+	// October -> December is 3
+	switch quarterIndex := (f.CreatedAt.Month() - 1) / 3; quarterIndex {
 	case 0:
 		return "00_jan_to_mar"
 	case 1:
