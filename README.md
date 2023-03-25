@@ -3,14 +3,14 @@ Inspired by Woodhouse from the Archer TV series. This repo is a collection of sc
 ## Woodhouse, organize my files!
 With the release binary:
 ```
-$ ./organizemyfiles.bin --in=/path/to/directory/with/unorganized/files/ --out=/path/to/organized/directory/
+$ ./woodhouse.bin organize /path/to/directory/with/unorganized/files/ /path/to/organized/directory/
 Copied /path/to/directory/with/unorganized/files/foo.md to /path/to/organized/directory/2018/jan_to_march/foo.md
 Copied /path/to/directory/with/unorganized/files/bar/lorem.ipsum to /path/to/organized/directory/2018/jan_to_march/lorem.ipsum
 ```
 
 In development:
 ```
-$ go run organizemyfiles/main.go --in=/path/to/directory/with/unorganized/files/ --out=/path/to/organized/directory/
+$ go run main.go organize path/to/directory/with/unorganized/files/ path/to/organized/directory/
 Copied /path/to/directory/with/unorganized/files/foo.md to /path/to/organized/directory/2018/jan_to_march/foo.md
 Copied /path/to/directory/with/unorganized/files/bar/lorem.ipsum to /path/to/organized/directory/2018/jan_to_march/lorem.ipsum
 ```
