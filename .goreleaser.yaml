@@ -1,0 +1,21 @@
+# source: https://goreleaser.com
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    ldflags:
+      # source: https://goreleaser.com/customization/builds/#passing-environment-variables-to-ldflags
+      - -s -w -X "main.go={{.Version}}"
+universal_binaries:
+  - replace: true
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"

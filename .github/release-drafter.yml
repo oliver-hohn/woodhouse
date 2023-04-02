@@ -1,0 +1,9 @@
+# source: https://github.com/marketplace/actions/release-drafter#configuration
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&'
+version-resolver:
+  default: minor
+template: |
+  _No changelog for now!_
